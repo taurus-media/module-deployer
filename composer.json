@@ -20,5 +20,13 @@
         "files": [
             "registration.php"
         ]
+    },
+    "extra": {
+        "map": [
+            [
+                "deploy-taurus-m2.php",
+                "deploy-taurus-m2.php"
+            ]
+        ]
     }
 }
