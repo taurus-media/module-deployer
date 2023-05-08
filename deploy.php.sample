@@ -2,7 +2,7 @@
 
 namespace Deployer;
 
-require_once __DIR__ . '/vendor/taurus/module-deployer/recipe/taurus-magento2.php';
+require 'deploy-taurus-m2.php';
 
 // Config
 set('repository', '<repository_url>');
