@@ -1,0 +1,97 @@
+<?php
+
+namespace Deployer;
+
+require 'recipe/magento2.php';
+
+// Default settings
+set('keep_releases', 5);
+set('writable_mode', 'chmod');
+set('default_timeout', 1200);
+set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction --optimize-autoloader');
+set('static_content_locales', '');
+set('static_content_jobs', '4');
+set('store_folders', '');
+set('hyva_themes', '');
+set('init_magepack', false);
+
+//
+// Custom tasks
+//
+
+/**
+ * Create symlinks for store folders
+ */
+task('deploy:create-store-folders', function () {
+    $storeFolders = get('store_folders', '');
+    if (!empty($storeFolders)) {
+        $storeFolders = explode(' ', trim($storeFolders));
+
+        cd('{{release_path}}/pub');
+        foreach ($storeFolders as $storeFolder) {
+            run('ln -s ../pub ' . $storeFolder);
+        }
+    }
+});
+after('deploy:shared', 'deploy:create-store-folders');
+
+/**
+ * MagePack compilation
+ */
+task('deploy:magepack', function () {
+    if (get('init_magepack')) {
+        cd('{{release_path}}');
+        run('npm install');
+        run('./node_modules/.bin/magepack bundle');
+    } else {
+        writeln('MagePack is not configured!');
+    }
+});
+after('magento:deploy:assets', 'deploy:magepack');
+
+/**
+ * Hyva themes compilation
+ */
+task('deploy:hyva', function () {
+    $hyvaThemes = get('hyva_themes', '');
+    if (!empty($hyvaThemes)) {
+        $hyvaThemes = explode(' ', $hyvaThemes);
+        foreach ($hyvaThemes as $theme) {
+            cd('{{release_path}}/app/design/frontend/' + $theme + '/web/tailwind');
+            run('npm install');
+            run('npm run build-prod');
+        }
+    }
+});
+before('deploy:magento', 'deploy:hyva');
+
+/**
+ * Cache warmer
+ */
+task('deploy:cache-warmer', function () {
+    cd('{{current_path}}');
+    run('echo -e "\n" >> {{deploy_path}}/.dep/cache_warmer.log 2>&1');
+    run('date +"[%d-%m-%y %T]" >> {{deploy_path}}/.dep/cache_warmer.log 2>&1');
+    run('./cache-warmer.py --threads 4 --file pub/media/sitemap/sitemap.xml -v >> {{deploy_path}}/.dep/cache_warmer.log 2>&1 &');
+});
+after('deploy:publish', 'deploy:cache-warmer');
+
+
+// Unlock deployment if it is failed
+after('deploy:failed', 'deploy:unlock');
+
+//
+// Extend default settings
+//
+require 'deploy-config.php';
+
+foreach ($settings as $key => $value) {
+    set($key, $value);
+}
+
+foreach ($hosts as $alias => $host) {
+    host($alias)
+        ->setHostname($host['hostname'])
+        ->setRemoteUser($host['user'])
+        ->setDeployPath($host['path']);
+}

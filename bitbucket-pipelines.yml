@@ -8,11 +8,9 @@ pipelines:
           deployment: production
           script:
             - dep deploy -vvv --branch master production
-            - dep deploy:warm-cache -vvv production
     develop:
       - step:
           name: Deploy to Staging
           deployment: staging
           script:
             - dep deploy -vvv --branch develop staging
-            - dep deploy:warm-cache -vvv staging
