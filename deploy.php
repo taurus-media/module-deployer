@@ -61,6 +61,8 @@ task('deploy:hyva', function () {
             run('npm install');
             run('npm run build-prod');
         }
+    } else {
+        writeln('No Hyva themes configured!');
     }
 });
 before('deploy:magento', 'deploy:hyva');
