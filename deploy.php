@@ -79,6 +79,17 @@ task('deploy:cache-warmer', function () {
 });
 after('deploy:publish', 'deploy:cache-warmer');
 
+// Rewrite 'magento:deploy:assets' task to add possibility to compile each theme's content separately
+task('magento:deploy:assets', function () {
+    $themesToCompile = '';
+    if (count(get('magento_themes')) > 0) {
+        foreach (get('magento_themes') as $theme) {
+            run("{{bin/php}} {{release_or_current_path}}/bin/magento setup:static-content:deploy --content-version={{content_version}} -t $theme -f -j  {{static_content_jobs}}");
+        }
+    } else {
+        run("{{bin/php}} {{release_or_current_path}}/bin/magento setup:static-content:deploy --content-version={{content_version}} {{static_content_locales}} -j {{static_content_jobs}}");
+    }
+});
 
 // Unlock deployment if it is failed
 after('deploy:failed', 'deploy:unlock');
