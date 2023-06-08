@@ -57,7 +57,7 @@ task('deploy:hyva', function () {
     if (!empty($hyvaThemes)) {
         $hyvaThemes = explode(' ', $hyvaThemes);
         foreach ($hyvaThemes as $theme) {
-            cd('{{release_path}}/app/design/frontend/' + $theme + '/web/tailwind');
+            cd('{{release_path}}/app/design/frontend/' . $theme . '/web/tailwind');
             run('npm install');
             run('npm run build-prod');
         }
