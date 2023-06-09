@@ -91,6 +91,9 @@ task('magento:deploy:assets', function () {
     }
 });
 
+// Process custom shared folders defined in 'additional_shared_dirs'
+before('deploy:shared', 'deploy:additional-shared');
+
 // Unlock deployment if it is failed
 after('deploy:failed', 'deploy:unlock');
 
