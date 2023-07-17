@@ -8,7 +8,7 @@ require 'recipe/magento2.php';
 set('keep_releases', 5);
 set('writable_mode', 'chmod');
 set('default_timeout', 1200);
-set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction --optimize-autoloader');
+set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction');
 set('static_content_locales', '');
 set('static_content_jobs', '4');
 set('store_folders', '');
