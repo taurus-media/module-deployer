@@ -24,6 +24,10 @@ class TablePlugin
             $params['charset'] = 'utf8';
         }
 
+        if (isset($params['collation']) && $params['collation'] === 'utf8mb3_general_ci') {
+            $params['collation'] = 'utf8_general_ci';
+        }
+
         return $params;
     }
 }
