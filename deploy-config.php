@@ -2,9 +2,13 @@
 
 $settings = [
     'repository' => '',
-//    'store_folders' => 'fr de nl',
-//    'hyva_themes' => 'Taurus/hyva Taurus/hyva_de',
-//    'init_magepack' => true,
+    'store_folders' => [],
+    'hyva_themes' => [],
+    'init_magepack' => false,
+    'additional_shared_dirs' => [],
+    'cache_warmer_sitemaps' => [
+        'pub/media/sitemap/sitemap.xml'
+    ]
 ];
 
 $hosts = [
