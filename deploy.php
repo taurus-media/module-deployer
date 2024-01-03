@@ -71,11 +71,17 @@ before('deploy:magento', 'deploy:hyva');
  * Cache warmer
  */
 task('deploy:cache-warmer', function () {
-    cd('{{current_path}}');
-    run('echo -e "\n" >> {{deploy_path}}/.dep/cache_warmer.log 2>&1');
-    run('date +"[%d-%m-%y %T]" >> {{deploy_path}}/.dep/cache_warmer.log 2>&1');
-    run('./cache-warmer.py --threads 4 --file pub/media/sitemap/sitemap.xml -v >> {{deploy_path}}/.dep/cache_warmer.log 2>&1 &');
-    writeln('Cache warmer has been started in background mode. Logs will be written to: {{deploy_path}}/.dep/cache_warmer.log');
+    if (count(get('cache_warmer_sitemaps')) > 0) {
+        cd('{{current_path}}');
+        run('echo -e "\n" >> {{deploy_path}}/.dep/cache_warmer.log 2>&1');
+        run('date +"[%d-%m-%y %T]" >> {{deploy_path}}/.dep/cache_warmer.log 2>&1');
+        foreach (get('cache_warmer_sitemaps') as $sitemapPath) {
+            run('./cache-warmer.py --threads 4 --file ' . $sitemapPath . ' -v >> {{deploy_path}}/.dep/cache_warmer.log 2>&1 &');
+        }
+        writeln('Cache warmer has been started in background mode. Logs will be written to: {{deploy_path}}/.dep/cache_warmer.log');
+    } else {
+        writeln('No sitemaps configured for cache warmer.');
+    }
 });
 after('deploy:publish', 'deploy:cache-warmer');
 
