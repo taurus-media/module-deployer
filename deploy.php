@@ -23,10 +23,12 @@ set('init_magepack', false);
  * Create symlinks for store folders
  */
 task('deploy:create-store-folders', function () {
-    $storeFolders = get('store_folders', '');
-    if (!empty($storeFolders)) {
+    $storeFolders = get('store_folders', []);
+    if (is_string($storeFolders)) {
         $storeFolders = explode(' ', trim($storeFolders));
+    }
 
+    if (count($storeFolders) > 0) {
         cd('{{release_path}}/pub');
         foreach ($storeFolders as $storeFolder) {
             run('ln -s ../pub ' . $storeFolder);
@@ -53,9 +55,12 @@ after('magento:deploy:assets', 'deploy:magepack');
  * Hyva themes compilation
  */
 task('deploy:hyva', function () {
-    $hyvaThemes = get('hyva_themes', '');
-    if (!empty($hyvaThemes)) {
+    $hyvaThemes = get('hyva_themes', []);
+    if (is_string($hyvaThemes)) {
         $hyvaThemes = explode(' ', $hyvaThemes);
+    }
+
+    if (count($hyvaThemes) > 0) {
         foreach ($hyvaThemes as $theme) {
             cd('{{release_path}}/app/design/frontend/' . $theme . '/web/tailwind');
             run('npm install');
