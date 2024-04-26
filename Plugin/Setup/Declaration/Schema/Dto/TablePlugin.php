@@ -28,6 +28,10 @@ class TablePlugin
             $params['collation'] = 'utf8_general_ci';
         }
 
+        if ($params['comment'] === '') {
+            $params['comment'] = null;
+        }
+
         return $params;
     }
 }
