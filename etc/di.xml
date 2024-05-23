@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <!--
 /**
- * Copyright (c) 2023. Taurus. All rights reserved
+ * Copyright (c) 2024. Taurus. All rights reserved
  * @author Alex Tolochko
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <type name="Magento\Framework\Setup\Declaration\Schema\Dto\Table">
-        <plugin name="fix-percona-table=-charset" type="Taurus\Deployer\Plugin\Setup\Declaration\Schema\Dto\TablePlugin"/>
+    <type name="Magento\Framework\Setup\Declaration\Schema\Comparator">
+        <plugin name="fix-schema-comparator" type="Taurus\Deployer\Plugin\Setup\Declaration\Schema\ComparatorPlugin"/>
     </type>
 </config>

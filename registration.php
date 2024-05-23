@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2023. Taurus. All rights reserved
+ * Copyright (c) 2024. Taurus. All rights reserved
  * @author Alex Tolochko
  */
 
