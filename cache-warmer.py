@@ -9,34 +9,42 @@ import psutil
 import threading
 import time
 
-num_cpus = os.cpu_count()
+try:
+    num_cpus = os.cpu_count()
+except AttributeError:
+    num_cpus = psutil.cpu_count()
+
 pause_workers = False
+stop_watcher = False  # Add a flag to stop the watcher
 
 def load_watcher():
-    global pause_workers
-    while True:
+    global pause_workers, stop_watcher
+    while not stop_watcher:
         cpu_load = psutil.cpu_percent(interval=1)
-        if cpu_load > 70.0:
-            pause_workers = True
-        else:
-            pause_workers = False
+        pause_workers = cpu_load > 70.0
         time.sleep(1)
 
 def parse_sitemap(sitemap_url):
     response = requests.get(sitemap_url)
     response.raise_for_status()
 
-    root = ET.fromstring(response.text)
+    # Decode the content to UTF-8
+    content = response.content.decode('utf-8')
+
+    # Parse the XML content
+    parser = ET.XMLParser(encoding="utf-8")
+    root = ET.fromstring(content.encode('utf-8'), parser=parser)
+
+    namespace = {'ns': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
 
     if root.tag.endswith('sitemapindex'):
-        sitemap_urls = [url.text for url in root.iter('{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+        sitemap_urls = [url.text for url in root.findall('ns:sitemap/ns:loc', namespace)]
         urls = []
         for url in sitemap_urls:
             urls.extend(parse_sitemap(url))
         return urls
 
-    urls = [url.text for url in root.iter('{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
-
+    urls = [url.text for url in root.findall('ns:url/ns:loc', namespace)]
     return urls
 
 def worker(url):
@@ -54,17 +62,19 @@ def worker(url):
         response = requests.get(url, timeout=10)
         end_time = timer()
         load_time_before = end_time - start_time
+
         start_time = timer()
         response = requests.get(url, timeout=10)
         end_time = timer()
         load_time_after = end_time - start_time
+
         load_time_diff = load_time_before - load_time_after
         load_time_diff_percent = (load_time_diff / load_time_before) * 100 if load_time_before else None
         optimized = 'Yes' if load_time_diff_percent and load_time_diff_percent > 20 else 'No'
 
         status_code = response.status_code
     except requests.RequestException as e:
-        print(f"Error fetching {url}: {e}")
+        print("Error fetching {}: {}".format(url, e))
         status_code = 'error'
     return (url, status_code, load_time_before, load_time_after, load_time_diff, optimized)
 
@@ -79,10 +89,15 @@ def main():
     load_watcher_thread = threading.Thread(target=load_watcher)
     load_watcher_thread.start()
 
-    with ThreadPoolExecutor(max_workers=num_cpus) as executor:
-        results = list(executor.map(worker, urls))
+    try:
+        with ThreadPoolExecutor(max_workers=num_cpus) as executor:
+            results = list(executor.map(worker, urls))
+    finally:
+        global stop_watcher
+        stop_watcher = True
+        load_watcher_thread.join()
 
-    with open('results.csv', 'w', newline='') as file:
+    with open('results.csv', 'wb') as file:  # Open the file in binary mode
         writer = csv.writer(file)
         writer.writerow(["URL", "Status Code", "Load Time Before", "Load Time After", "Load Time Difference", "Optimized"])
         writer.writerows(results)

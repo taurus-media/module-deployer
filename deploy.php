@@ -81,7 +81,7 @@ task('deploy:cache-warmer', function () {
         run('echo -e "\n" >> {{deploy_path}}/.dep/cache_warmer.log 2>&1');
         run('date +"[%d-%m-%y %T]" >> {{deploy_path}}/.dep/cache_warmer.log 2>&1');
         foreach (get('cache_warmer_sitemaps') as $sitemapPath) {
-            run('./cache-warmer.py --threads 4 --file ' . $sitemapPath . ' -v >> {{deploy_path}}/.dep/cache_warmer.log 2>&1 &');
+            run('python cache-warmer.py ' . $sitemapPath . ' >> {{deploy_path}}/.dep/cache_warmer.log 2>&1 &');
         }
         writeln('Cache warmer has been started in background mode. Logs will be written to: {{deploy_path}}/.dep/cache_warmer.log');
     } else {
