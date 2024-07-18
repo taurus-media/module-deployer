@@ -1,84 +1,91 @@
-#!/usr/bin/env python
-"""
-Warm the caches of your website by crawling each page defined in sitemap.xml.
-To use, download this file and make it executable. Then run:
-./cache-warmer.py --threads 4 --file /data/web/public/sitemap.xml -v
-"""
-import argparse
-import multiprocessing.pool as mpool
-import os.path
-import re
 import sys
-import time
 import requests
-import subprocess
+import xml.etree.ElementTree as ET
+import csv
+from time import time as timer
+from concurrent.futures import ThreadPoolExecutor
+import os
+import psutil
+import threading
+import time
 
+num_cpus = os.cpu_count()
+pause_workers = False
 
-results = []
-start = time.time()
-
-
-def parse_options():
-    parser = argparse.ArgumentParser(description="""Cache crawler based on a sitemap.xml file""")
-    parser.add_argument('-t', '--threads', help='How many threads to use', default=10, required=False, type=int)
-    parser.add_argument('-f', '--file', help='The sitemap xml file', required=True, type=str)
-    parser.add_argument('-v', '--verbose', help='Be more verbose', action='store_true', default=False)
-
-    args = parser.parse_args()
-    if not os.path.isfile(args.file):
-        parser.error('Could not find sitemap file %s' % args.file)
-    return args
-
-
-def crawl_url(url, verbose=False):
-    if verbose:
-        print "Crawling {}".format(url)
-    a = requests.get(url, headers={"user-agent": "SitemapCacheWarmer"})
-    return {'exit': 0 if a.ok() else 1, 'out': a.text, 'url': url}
-
-
-def make_results():
-    errcount = 0
-    exec_time = format(time.time() - start, '.4f')
-    for item in results:
-        if item['exit'] == 0:
-            continue
+def load_watcher():
+    global pause_workers
+    while True:
+        cpu_load = psutil.cpu_percent(interval=1)
+        if cpu_load > 70.0:
+            pause_workers = True
         else:
-            errcount += 1
-            print "Errors detected in %s:\n%s\n" % (item['url'], item['out'])
-            print "=" * 50
-    if errcount == 0:
-        print "All DONE! - All urls are warmed! - done in %s " % exec_time
-        return 0
-    else:
-        print "%d Errors detected! - done in %ss" % (errcount, exec_time)
-        return 1
+            pause_workers = False
+        time.sleep(1)
 
+def parse_sitemap(sitemap_url):
+    response = requests.get(sitemap_url)
+    response.raise_for_status()
 
-def get_sitemap_urls(filename):
-    with open(filename) as fh:
-        return re.findall('<loc>(.*?)</loc>?', fh.read())
+    root = ET.fromstring(response.text)
 
+    if root.tag.endswith('sitemapindex'):
+        sitemap_urls = [url.text for url in root.iter('{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+        urls = []
+        for url in sitemap_urls:
+            urls.extend(parse_sitemap(url))
+        return urls
 
-def callback(output):
-    results.append(output)
+    urls = [url.text for url in root.iter('{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
 
+    return urls
+
+def worker(url):
+    global pause_workers
+    while pause_workers:
+        time.sleep(1)
+
+    load_time_before = None
+    load_time_after = None
+    load_time_diff = None
+    load_time_diff_percent = None
+    optimized = 'n/a'
+    try:
+        start_time = timer()
+        response = requests.get(url, timeout=10)
+        end_time = timer()
+        load_time_before = end_time - start_time
+        start_time = timer()
+        response = requests.get(url, timeout=10)
+        end_time = timer()
+        load_time_after = end_time - start_time
+        load_time_diff = load_time_before - load_time_after
+        load_time_diff_percent = (load_time_diff / load_time_before) * 100 if load_time_before else None
+        optimized = 'Yes' if load_time_diff_percent and load_time_diff_percent > 20 else 'No'
+
+        status_code = response.status_code
+    except requests.RequestException as e:
+        print(f"Error fetching {url}: {e}")
+        status_code = 'error'
+    return (url, status_code, load_time_before, load_time_after, load_time_diff, optimized)
 
 def main():
-    args = parse_options()
-    sitemap_urls = get_sitemap_urls(args.file)
+    if len(sys.argv) != 2:
+        print("Gebruik: python script.py <sitemap_url>")
+        sys.exit(1)
+    sitemap_url = sys.argv[1]
 
-    if args.verbose:
-        print "Crawling {} urls with {} threads\n[Please Wait!]".format(len(sitemap_urls), args.threads)
-        print "=" * 50
+    urls = parse_sitemap(sitemap_url)
 
-    pool = mpool.ThreadPool(args.threads)
-    for url in sitemap_urls:
-        pool.apply_async(crawl_url, args=(url,), callback=callback)
-    pool.close()
-    pool.join()
-    sys.exit(make_results())
+    load_watcher_thread = threading.Thread(target=load_watcher)
+    load_watcher_thread.start()
 
+    with ThreadPoolExecutor(max_workers=num_cpus) as executor:
+        results = list(executor.map(worker, urls))
+
+    with open('results.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["URL", "Status Code", "Load Time Before", "Load Time After", "Load Time Difference", "Optimized"])
+        writer.writerows(results)
 
 if __name__ == "__main__":
     main()
