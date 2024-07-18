@@ -8,6 +8,7 @@ import os
 import psutil
 import threading
 import time
+import re
 
 try:
     num_cpus = os.cpu_count()
@@ -24,28 +25,9 @@ def load_watcher():
         pause_workers = cpu_load > 70.0
         time.sleep(1)
 
-def parse_sitemap(sitemap_url):
-    response = requests.get(sitemap_url)
-    response.raise_for_status()
-
-    # Decode the content to UTF-8
-    content = response.content.decode('utf-8')
-
-    # Parse the XML content
-    parser = ET.XMLParser(encoding="utf-8")
-    root = ET.fromstring(content.encode('utf-8'), parser=parser)
-
-    namespace = {'ns': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
-
-    if root.tag.endswith('sitemapindex'):
-        sitemap_urls = [url.text for url in root.findall('ns:sitemap/ns:loc', namespace)]
-        urls = []
-        for url in sitemap_urls:
-            urls.extend(parse_sitemap(url))
-        return urls
-
-    urls = [url.text for url in root.findall('ns:url/ns:loc', namespace)]
-    return urls
+def parse_sitemap(filename):
+    with open(filename) as fh:
+        return re.findall('<loc>(.*?)</loc>?', fh.read())
 
 def worker(url):
     global pause_workers
@@ -97,7 +79,7 @@ def main():
         stop_watcher = True
         load_watcher_thread.join()
 
-    with open('results.csv', 'wb') as file:  # Open the file in binary mode
+    with open('~/.dep/cache_warmer_results.csv', 'wb') as file:  # Open the file in binary mode
         writer = csv.writer(file)
         writer.writerow(["URL", "Status Code", "Load Time Before", "Load Time After", "Load Time Difference", "Optimized"])
         writer.writerows(results)
