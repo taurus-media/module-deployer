@@ -79,7 +79,7 @@ def main():
         stop_watcher = True
         load_watcher_thread.join()
 
-    with open('~/.dep/cache_warmer_results.csv', 'wb') as file:  # Open the file in binary mode
+    with open('cache_warmer_results.csv', 'wb') as file:  # Open the file in binary mode
         writer = csv.writer(file)
         writer.writerow(["URL", "Status Code", "Load Time Before", "Load Time After", "Load Time Difference", "Optimized"])
         writer.writerows(results)
