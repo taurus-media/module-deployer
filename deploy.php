@@ -84,7 +84,7 @@ task('deploy:vcl-refresh', function () {
         run("varnishadm vcl.use magento2_$timestamp");
     }
 });
-after('deploy:publish', 'deploy:varnish-config');
+after('deploy:publish', 'deploy:vcl-refresh');
 
 /**
  * Cache warmer
