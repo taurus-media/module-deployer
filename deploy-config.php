@@ -5,6 +5,7 @@ $settings = [
     'store_folders' => [],
     'hyva_themes' => [],
     'init_magepack' => false,
+    'refresh_varnish_config' => false,
     'additional_shared_dirs' => [],
     'cache_warmer_sitemaps' => [
         'pub/media/sitemap/sitemap.xml'

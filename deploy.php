@@ -14,6 +14,7 @@ set('static_content_jobs', '4');
 set('store_folders', '');
 set('hyva_themes', '');
 set('init_magepack', false);
+set('refresh_varnish_config', false);
 
 //
 // Custom tasks
@@ -71,6 +72,19 @@ task('deploy:hyva', function () {
     }
 });
 before('deploy:magento', 'deploy:hyva');
+
+/**
+ * Update Varnish config (mainly for Elgentos_VarnishExtended module)
+ */
+task('deploy:vcl-refresh', function () {
+    if (get('refresh_varnish_config')) {
+        $timestamp = date('YmdHis');
+        run("{{bin/php}} {{release_or_current_path}}/bin/magento varnish:vcl:generate >> {{release_path}}/default.vcl");
+        run("varnishadm vcl.load magento2_$timestamp {{release_path}}/default.vcl");
+        run("varnishadm vcl.use magento2_$timestamp");
+    }
+});
+after('deploy:publish', 'deploy:varnish-config');
 
 /**
  * Cache warmer
