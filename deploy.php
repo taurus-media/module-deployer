@@ -79,8 +79,8 @@ before('deploy:magento', 'deploy:hyva');
 task('deploy:vcl-refresh', function () {
     if (get('refresh_varnish_config')) {
         $timestamp = date('YmdHis');
-        run("{{bin/php}} {{release_or_current_path}}/bin/magento varnish:vcl:generate >> {{release_path}}/default.vcl");
-        run("varnishadm vcl.load magento2_$timestamp {{release_path}}/default.vcl");
+        run("{{bin/php}} {{release_or_current_path}}/bin/magento varnish:vcl:generate --input-file={{release_path}}/app/etc/varnish6.vcl --output-file={{release_path}}/magento2.vcl");
+        run("varnishadm vcl.load magento2_$timestamp {{release_path}}/magento2.vcl");
         run("varnishadm vcl.use magento2_$timestamp");
     }
 });
