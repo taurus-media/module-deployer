@@ -75,12 +75,15 @@ before('deploy:magento', 'deploy:hyva');
 
 /**
  * Update Varnish config (mainly for Elgentos_VarnishExtended module)
+ *
+ * @IMPORTANT: this feature requires taurus-media/magento2-varnish-extended to be installed
  */
 task('deploy:vcl-refresh', function () {
     if (get('refresh_varnish_config')) {
         $timestamp = date('YmdHis');
-        run("{{bin/php}} {{release_or_current_path}}/bin/magento varnish:vcl:generate --input-file={{release_path}}/app/etc/varnish6.vcl --output-file={{release_path}}/magento2.vcl");
-        run("varnishadm vcl.load magento2_$timestamp {{release_path}}/magento2.vcl");
+        run("touch {{release_or_current_path}}/magento2.vcl");
+        run("{{bin/php}} {{release_or_current_path}}/bin/magento varnish:vcl:generate --input-file=vendor/taurus-media/magento2-varnish-extended/etc/varnish6.vcl --output-file=magento2.vcl");
+        run("varnishadm vcl.load magento2_$timestamp {{release_or_current_path}}/magento2.vcl");
         run("varnishadm vcl.use magento2_$timestamp");
     }
 });
