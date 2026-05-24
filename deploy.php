@@ -70,7 +70,7 @@ task('deploy:hyva', function () {
         writeln('No Hyva themes configured!');
     }
 });
-before('deploy:magento', 'deploy:hyva');
+before('magento:deploy:assets', 'deploy:hyva');
 
 /**
  * Cache warmer
