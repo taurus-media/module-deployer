@@ -10,7 +10,7 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "deployer/deployer": "7.1.3"
+        "deployer/deployer": "^8.0.5"
     },
     "autoload": {
         "psr-4": {
