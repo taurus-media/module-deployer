@@ -11,8 +11,8 @@ set('default_timeout', 1200);
 set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction');
 set('static_content_locales', '');
 set('static_content_jobs', '4');
-set('store_folders', '');
-set('hyva_themes', '');
+set('store_folders', []);
+set('hyva_themes', []);
 set('init_magepack', false);
 
 //
