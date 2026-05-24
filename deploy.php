@@ -14,6 +14,7 @@ set('static_content_jobs', '4');
 set('store_folders', []);
 set('hyva_themes', []);
 set('init_magepack', false);
+set('redis_db', false);
 
 //
 // Custom tasks
@@ -89,6 +90,16 @@ task('deploy:cache-warmer', function () {
     }
 });
 after('deploy:publish', 'deploy:cache-warmer');
+
+/**
+ * Flush Redis cache
+ */
+task('magento:redis:flush', function () {
+    if ($redisDb = get('redis_db')) {
+        run("redis-cli -n $redisDb flushdb");
+    }
+});
+after('magento:cache:flush', 'magento:redis:flush');
 
 // Rewrite 'magento:deploy:assets' task to add possibility to compile each theme's content separately
 task('magento:deploy:assets', function () {
