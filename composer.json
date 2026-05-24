@@ -8,6 +8,7 @@
             "name": "Taurus Media B.V."
         }
     ],
+    "version": "1.3.0",
     "minimum-stability": "stable",
     "require": {
         "deployer/deployer": "^8.0.5"
