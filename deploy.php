@@ -5,7 +5,7 @@ namespace Deployer;
 require 'recipe/magento2.php';
 
 // Default settings
-set('keep_releases', 5);
+set('keep_releases', 3);
 set('writable_mode', 'chmod');
 set('default_timeout', 1200);
 set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction');
