@@ -95,7 +95,8 @@ after('deploy:publish', 'deploy:cache-warmer');
  * Flush Redis cache
  */
 task('magento:redis:flush', function () {
-    if ($redisDb = get('redis_db')) {
+    $redisDb = get('redis_db');
+    if ($redisDb !== false) {
         run("redis-cli -n $redisDb flushdb");
     }
 });
