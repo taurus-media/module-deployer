@@ -14,7 +14,6 @@ set('static_content_jobs', '4');
 set('store_folders', []);
 set('hyva_themes', []);
 set('init_magepack', false);
-set('redis_db', false);
 
 //
 // Custom tasks
@@ -95,8 +94,15 @@ after('deploy:publish', 'deploy:cache-warmer');
  * Flush Redis cache
  */
 task('magento:redis:flush', function () {
-    $redisDb = get('redis_db');
-    if ($redisDb !== false) {
+    // Read Redis cache configuration from Magento env.php
+    cd('{{current_path}}');
+
+    $redisDb = run("php -r '
+        \$config = include \"app/etc/env.php\";
+        echo \$config[\"cache\"][\"frontend\"][\"default\"][\"backend_options\"][\"database\"] ?? false;
+    '");
+
+    if (!empty($redisDb)) {
         run("redis-cli -n $redisDb flushdb");
     }
 });
