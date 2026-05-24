@@ -124,6 +124,11 @@ after('deploy:failed', 'deploy:unlock');
 //
 require 'deploy-config.php';
 
+/**
+ * @var array $settings
+ * @var array $hosts
+ */
+
 foreach ($settings as $key => $value) {
     set($key, $value);
 }
