@@ -45,6 +45,7 @@ task('deploy:magepack', function () {
         cd('{{release_path}}');
         run('npm install');
         run('./node_modules/.bin/magepack bundle');
+        run('rm -rf node_modules');
     } else {
         writeln('MagePack is not configured!');
     }
