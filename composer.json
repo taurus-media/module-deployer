@@ -2,7 +2,7 @@
     "name": "taurus/module-deployer",
     "description": "Auto-deployer for Magento 2",
     "type": "magento2-component",
-    "license": "proprietary",
+    "license": "MIT",
     "authors": [
         {
             "name": "Taurus Media B.V."
